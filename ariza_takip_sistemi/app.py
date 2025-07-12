@@ -22,10 +22,10 @@ def read_csv():
                         'link': row['Linkler'],
                         'latitude': latitude,
                         'longitude': longitude,
-                        'before_photo_path': row.get('Önceki Fotoğraf Yolu', None),
-                        'after_photo_path': row.get('Sonraki Fotoğraf Yolu', None),
-                        'before_photo_timestamp': row.get('Arıza Yüklenme Saati', None),
-                        'after_photo_timestamp': row.get('Arıza Giderilme Saati', None)
+                        'before_photo_path': row.get('Before_Photo_Path', None),
+                        'after_photo_path': row.get('After_Photo_Path', None),
+                        'before_photo_timestamp': row.get('Before_Photo_Timestamp', None),
+                        'after_photo_timestamp': row.get('After_Photo_Timestamp', None)
                     }
                     issues.append(issue)
                 except (KeyError, ValueError, IndexError):
