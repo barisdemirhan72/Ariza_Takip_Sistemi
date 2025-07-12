@@ -1,86 +1,111 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 import csv
 import os
+import datetime
 
-app = Flask(__name__) # Flask uygulamasını başlatır
+app = Flask(__name__)
 
 def read_csv():
     issues = []
     try:
-        with open('FİNAL MAHALLE.csv', 'r', encoding='utf-8') as f: # CSV dosyasını UTF-8 ile açar
-            reader = csv.DictReader(f) # CSV satırlarını sözlük olarak okur
+        with open('FİNAL MAHALLE.csv', 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
             for row in reader:
                 try:
-                    coords = row['Koordinatlar'].split(',') # Koordinatlar sütununu virgülle ayırır
-                    latitude = float(coords[0].strip()) # Enlemi float'a çevirir
-                    longitude = float(coords[1].strip()) # Boylamı float'a çevirir
+                    coords = row['Koordinatlar'].split(',')
+                    latitude = float(coords[0].strip())
+                    longitude = float(coords[1].strip())
                     issue = {
-                        'id': int(row['Veri No']), # Arıza ID'sini tamsayıya çevirir
-                        'issue_no': int(row.get('No', 0)), # Mahalle arızası numarasını tamsayıya çevirir, eksikse 0 kullanır
-                        'neighborhood': row['Mahalle İsmi'], # Mahalle adını alır
-                        'link': row['Linkler'], # Google Maps linkini alır
-                        'latitude': latitude, # Enlemi kaydeder
-                        'longitude': longitude, # Boylamı kaydeder
-                        'before_photo_path': None, # Öncesi fotoğrafı için varsayılan None
-                        'after_photo_path': None # Sonrası fotoğrafı için varsayılan None
+                        'id': int(row['Veri No']),
+                        'issue_no': int(row.get('No', 0)),
+                        'neighborhood': row['Mahalle İsmi'],
+                        'link': row['Linkler'],
+                        'latitude': latitude,
+                        'longitude': longitude,
+                        'before_photo_path': row.get('Önceki Fotoğraf Yolu', None),
+                        'after_photo_path': row.get('Sonraki Fotoğraf Yolu', None),
+                        'before_photo_timestamp': row.get('Arıza Yüklenme Saati', None),
+                        'after_photo_timestamp': row.get('Arıza Giderilme Saati', None)
                     }
-                    before_path = f"photos/{issue['id']}_before.jpg" # Öncesi fotoğraf yolunu oluşturur
-                    after_path = f"photos/{issue['id']}_after.jpg" # Sonrası fotoğraf yolunu oluşturur
-                    if os.path.exists(os.path.join('static', before_path)): # Öncesi fotoğrafın varlığını kontrol eder
-                        issue['before_photo_path'] = before_path # Varsa yolu kaydeder
-                    if os.path.exists(os.path.join('static', after_path)): # Sonrası fotoğrafın varlığını kontrol eder
-                        issue['after_photo_path'] = after_path # Varsa yolu kaydeder
-                    issues.append(issue) # Arızayı listeye ekler
-                except (KeyError, ValueError, IndexError): # Sütun eksikliği veya veri hatası
-                    print(f"Veri hatası, satır atlanıyor: {row}") # Hata mesajı yazdırır
+                    issues.append(issue)
+                except (KeyError, ValueError, IndexError):
+                    print(f"Veri hatası, satır atlanıyor: {row}")
                     continue
-    except FileNotFoundError: # Dosya bulunamazsa
-        print("Hata: FİNAL MAHALLE.csv dosyası bulunamadı!") # Hata mesajı yazdırır
-        return [] # Boş liste döndürür
-    except Exception as e: # Diğer hatalar
-        print(f"CSV okuma hatası: {e}") # Hata mesajı yazdırır
-        return [] # Boş liste döndürür
-    return issues # Arıza listesini döndürür
+    except FileNotFoundError:
+        print("Hata: FİNAL MAHALLE.csv dosyası bulunamadı!")
+        return []
+    except Exception as e:
+        print(f"CSV okuma hatası: {e}")
+        return []
+    return issues
+
+def update_csv(id, before_path=None, after_path=None, before_timestamp=None, after_timestamp=None):
+    try:
+        with open('FİNAL MAHALLE.csv', 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            rows = list(reader)
+            fieldnames = reader.fieldnames
+            if 'Before_Photo_Path' not in fieldnames:
+                fieldnames += ['Before_Photo_Path', 'After_Photo_Path', 'Before_Photo_Timestamp', 'After_Photo_Timestamp']
+        with open('FİNAL MAHALLE.csv', 'w', encoding='utf-8', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            for row in rows:
+                if int(row['Veri No']) == id:
+                    if before_path:
+                        row['Before_Photo_Path'] = before_path
+                    if after_path:
+                        row['After_Photo_Path'] = after_path
+                    if before_timestamp:
+                        row['Before_Photo_Timestamp'] = before_timestamp
+                    if after_timestamp:
+                        row['After_Photo_Timestamp'] = after_timestamp
+                writer.writerow(row)
+    except Exception as e:
+        print(f"CSV güncelleme hatası: {e}")
 
 @app.route('/')
 def index():
-    return render_template('index.html') # Ana sayfayı render eder
+    return render_template('index.html')
 
 @app.route('/issues')
 def get_issues():
-    neighborhood = request.args.get('neighborhood') # Mahalle filtresi alır
-    issues = read_csv() # CSV'den arızaları okur
-    if not issues: # Veri yoksa
-        return jsonify({"error": "Veri yüklenemedi, CSV dosyası kontrol edin"}), 500 # Hata mesajı döndürür
-    if neighborhood: # Mahalle filtresi varsa
-        issues = [issue for issue in issues if issue['neighborhood'] == neighborhood] # Arızaları filtreler
-    return jsonify(issues) # Arızaları JSON olarak döndürür
+    neighborhood = request.args.get('neighborhood')
+    issues = read_csv()
+    if not issues:
+        return jsonify({"error": "Veri yüklenemedi, CSV dosyası kontrol edin"}), 500
+    if neighborhood:
+        issues = [issue for issue in issues if issue['neighborhood'] == neighborhood]
+    return jsonify(issues)
 
 @app.route('/neighborhoods')
 def get_neighborhoods():
-    issues = read_csv() # CSV'den arızaları okur
-    if not issues: # Veri yoksa
-        return jsonify({"error": "Veri yüklenemedi, CSV dosyası kontrol edin"}), 500 # Hata mesajı döndürür
-    neighborhoods = sorted(set(issue['neighborhood'] for issue in issues)) # Benzersiz mahalleleri sıralar
-    return jsonify(neighborhoods) # Mahalleleri JSON olarak döndürür
+    issues = read_csv()
+    if not issues:
+        return jsonify({"error": "Veri yüklenemedi, CSV dosyası kontrol edin"}), 500
+    neighborhoods = sorted(set(issue['neighborhood'] for issue in issues))
+    return jsonify(neighborhoods)
 
 @app.route('/upload/<int:id>', methods=['GET', 'POST'])
 def upload_photos(id):
-    if request.method == 'POST': # POST isteği ise
-        before_file = request.files.get('before') # Öncesi fotoğrafı alır
-        after_file = request.files.get('after') # Sonrası fotoğrafı alır
-        os.makedirs('static/photos', exist_ok=True) # Fotoğraf klasörünü oluşturur
-        if before_file and before_file.filename != '': # Öncesi fotoğraf varsa
-            file_ext = os.path.splitext(before_file.filename)[1] # Dosya uzantısını alır
-            filename = f"{id}_before{file_ext}" # Dosya adını oluşturur
-            before_file.save(os.path.join('static/photos', filename)) # Dosyayı kaydeder
-        if after_file and after_file.filename != '': # Sonrası fotoğraf varsa
-            file_ext = os.path.splitext(after_file.filename)[1] # Dosya uzantısını alır
-            filename = f"{id}_after{file_ext}" # Dosya adını oluşturur
-            after_file.save(os.path.join('static/photos', filename)) # Dosyayı kaydeder
-        return redirect(url_for('index')) # Ana sayfaya yönlendirir
-    return render_template('upload.html', id=id) # Yükleme sayfasını render eder
+    if request.method == 'POST':
+        before_file = request.files.get('before')
+        after_file = request.files.get('after')
+        os.makedirs('static/photos', exist_ok=True)
+        current_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        before_path = None
+        after_path = None
+        if before_file and before_file.filename != '':
+            file_ext = os.path.splitext(before_file.filename)[1]
+            before_path = f"photos/{id}_before{file_ext}"
+            before_file.save(os.path.join('static', before_path))
+        if after_file and after_file.filename != '':
+            file_ext = os.path.splitext(after_file.filename)[1]
+            after_path = f"photos/{id}_after{file_ext}"
+            after_file.save(os.path.join('static', after_path))
+        update_csv(id, before_path, after_path, current_time if before_path else None, current_time if after_path else None)
+        return redirect(url_for('index'))
+    return render_template('upload.html', id=id)
 
 if __name__ == '__main__':
-    print(read_csv()[:5]) # İlk 5 arızayı konsola yazdırır
-    app.run(debug=True) # Flask uygulamasını hata ayıklama modunda başlatır
+    app.run(debug=True)

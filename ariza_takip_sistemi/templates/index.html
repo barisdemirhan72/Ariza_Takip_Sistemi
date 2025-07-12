@@ -14,12 +14,10 @@
             font-family: Arial, sans-serif;
             background-color: #f0f4f8;
         }
-
         .container {
             display: flex;
-            height: 100vh; /* Tüm ekran yüksekliği */
+            height: 100vh;
         }
-
         #sidebar {
             width: 20%;
             padding: 20px;
@@ -27,16 +25,13 @@
             box-shadow: 2px 0 5px rgba(0,0,0,0.1);
             overflow-y: auto;
         }
-
         #map {
             flex-grow: 1;
             height: 100%;
         }
-
         h3 {
             color: #2c3e50;
         }
-
         select {
             width: 100%;
             padding: 10px;
@@ -46,12 +41,10 @@
             font-size: 16px;
             background-color: #ecf0f1;
         }
-
         select:focus {
             outline: none;
             border-color: #3498db;
         }
-
         #error-message {
             color: #e74c3c;
             font-size: 14px;
@@ -70,8 +63,6 @@
         </div>
         <div id="map"></div>
     </div>
-
-    <!-- JavaScript bölümü aynı kalabilir -->
     <script>
         var map = L.map('map').setView([36.583, 36.163], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -134,7 +125,9 @@
                                 <p>Mahalle: ${issue.neighborhood} (${issue.issue_no})</p>
                                 <p><a href="${issue.link}" target="_blank">Google Maps Linki</a></p>
                                 ${issue.before_photo_path ? `<img src="/static/${issue.before_photo_path}" alt="Önce" style="width:100px;">` : 'Önce Fotoğraf Yok'}
+                                ${issue.before_photo_timestamp ? `<p>Önce Fotoğraf Yükleme: ${issue.before_photo_timestamp}</p>` : ''}
                                 ${issue.after_photo_path ? `<img src="/static/${issue.after_photo_path}" alt="Sonra" style="width:100px;">` : 'Sonra Fotoğraf Yok'}
+                                ${issue.after_photo_timestamp ? `<p>Sonra Fotoğraf Yükleme: ${issue.after_photo_timestamp}</p>` : ''}
                                 <br><a href="/upload/${issue.id}">Fotoğraf Yükle</a>
                             </div>
                         `;
