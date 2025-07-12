@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fotoğraf Yükle - Arıza #{{ id }}</title>
+</head>
+<body>
+    <h1>Arıza #{{ id }} için Fotoğraf Yükle</h1>
+    <form method="POST" enctype="multipart/form-data">
+        <label for="before">Önce Fotoğrafı:</label>
+        <input type="file" name="before" id="before"><br>
+        <label for="after">Sonra Fotoğrafı:</label>
+        <input type="file" name="after" id="after"><br>
+        <input type="submit" value="Yükle">
+    </form>
+    <a href="/">Haritaya Geri Dön</a>
+</body>
+</html>
