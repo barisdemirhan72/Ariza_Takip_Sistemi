@@ -294,53 +294,53 @@
                 });
                 
             function loadIssues(neighborhood) {
-            var url = neighborhood ? `/issues?neighborhood=${encodeURIComponent(neighborhood)}` : '/issues';
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        showError(data.error);
-                        return;
-                    }
-                    console.log('Yüklenen veriler:', data);
-                    markers.clearLayers();
-                    data.forEach(issue => {
-                        if (!issue.latitude || !issue.longitude) {
-                            console.warn(`Geçersiz koordinatlar, ID: ${issue.id}`);
+                var url = neighborhood ? `/issues?neighborhood=${encodeURIComponent(neighborhood)}` : '/issues';
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            showError(data.error);
                             return;
                         }
-                        var iconUrl = issue.after_photo_path 
-                            ? '/static/icons/green-pin.png' 
-                            : '/static/icons/red-pin.png';
-                        var marker = L.marker([issue.latitude, issue.longitude], {
-                            icon: L.icon({
-                                iconUrl: iconUrl,
-                                iconSize: [50, 50],
-                                iconAnchor: [20, 50],
-                                popupAnchor: [0, -50]
-                            })
+                        console.log('Yüklenen veriler:', data);
+                        markers.clearLayers();
+                        data.forEach(issue => {
+                            if (!issue.latitude || !issue.longitude) {
+                                console.warn(`Geçersiz koordinatlar, ID: ${issue.id}`);
+                                return;
+                            }
+                            var iconUrl = issue.after_photo_path 
+                                ? '/static/icons/green-pin.png' 
+                                : '/static/icons/red-pin.png';
+                            var marker = L.marker([issue.latitude, issue.longitude], {
+                                icon: L.icon({
+                                    iconUrl: iconUrl,
+                                    iconSize: [50, 50],
+                                    iconAnchor: [20, 50],
+                                    popupAnchor: [0, -50]
+                                })
+                            });
+                            var popupContent = `
+                                <div>
+                                    <h3>Arıza #${issue.id}</h3>
+                                    <p>Mahalle: ${issue.neighborhood} (${issue.issue_no})</p>
+                                    <p><a href="${issue.link}" target="_blank">Google Maps Linki</a></p>
+                                    ${issue.before_photo_path ? `<img src="/static/${issue.before_photo_path}" alt="Önce">` : 'Önce Fotoğraf Yok'}
+                                    ${issue.before_photo_timestamp ? `<p>Önce Fotoğraf: ${issue.before_photo_timestamp}</p>` : ''}
+                                    ${issue.after_photo_path ? `<img src="/static/${issue.after_photo_path}" alt="Sonra">` : 'Sonra Fotoğraf Yok'}
+                                    ${issue.after_photo_timestamp ? `<p>Sonra Fotoğraf: ${issue.after_photo_timestamp}</p>` : ''}
+                                    <br><a href="/upload/${issue.id}" target="_blank">Fotoğraf Yükle</a>
+                                </div>
+                            `;
+                            marker.bindPopup(popupContent);
+                            markers.addLayer(marker);
                         });
-                        var popupContent = `
-                            <div>
-                                <h3>Arıza #${issue.id}</h3>
-                                <p>Mahalle: ${issue.neighborhood} (${issue.issue_no})</p>
-                                <p><a href="${issue.link}" target="_blank">Google Maps Linki</a></p>
-                                ${issue.before_photo_path ? `<img src="/static/${issue.before_photo_path}" alt="Önce">` : 'Önce Fotoğraf Yok'}
-                                ${issue.before_photo_timestamp ? `<p>Önce Fotoğraf: ${issue.before_photo_timestamp}</p>` : ''}
-                                ${issue.after_photo_path ? `<img src="/static/${issue.after_photo_path}" alt="Sonra">` : 'Sonra Fotoğraf Yok'}
-                                ${issue.after_photo_timestamp ? `<p>Sonra Fotoğraf: ${issue.after_photo_timestamp}</p>` : ''}
-                                <br><a href="/upload/${issue.id}" target="_blank">Fotoğraf Yükle</a>
-                            </div>
-                        `;
-                        marker.bindPopup(popupContent);
-                        markers.addLayer(marker);
+                    })
+                    .catch(error => {
+                        console.error('Arızalar yüklenirken hata:', error);
+                        showError('Arızalar yüklenemedi!');
                     });
-                })
-                .catch(error => {
-                    console.error('Arızalar yüklenirken hata:', error);
-                    showError('Arızalar yüklenemedi!');
-                });
-        }
+            }
             
             loadIssues('');
             document.getElementById('neighborhood-select').addEventListener('change', function() {
