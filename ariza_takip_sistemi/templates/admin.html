@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; }
+        .container { max-width: 1200px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1, h2 { color: #333; }
+        a { color: #e74c3c; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #2c3e50; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        form { margin-top: 20px; padding: 20px; border: 1px solid #ccc; border-radius: 5px; background: #fafafa; }
+        input[type="text"], input[type="number"] { width: calc(100% - 22px); padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        button { background-color: #3498db; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #2980b9; }
+        .back-link { display: inline-block; margin-top: 20px; color: #3498db; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Admin Paneli</h1>
+        <a href="/" class="back-link">Haritaya Geri Dön</a>
+
+        <h2>Yeni Arıza Ekle</h2>
+        <form action="/add" method="POST">
+            <input type="text" name="neighborhood" placeholder="Mahalle İsmi" required>
+            <input type="number" name="issue_no" placeholder="Arıza No (Opsiyonel)">
+            <input type="text" name="coordinates" placeholder="Koordinatlar (örn: 36.58, 36.16)" required>
+            <input type="text" name="link" placeholder="Google Maps Linki">
+            <button type="submit">Ekle</button>
+        </form>
+
+        <h2>Mevcut Arızalar</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Veri No</th>
+                    <th>Arıza No</th>
+                    <th>Mahalle</th>
+                    <th>Koordinatlar</th>
+                    <th>İşlem</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for issue in issues %}
+                <tr>
+                    <td>{{ issue['Veri No'] }}</td>
+                    <td>{{ issue.get('No', 'N/A') }}</td>
+                    <td>{{ issue['Mahalle İsmi'] }}</td>
+                    <td>{{ issue['Koordinatlar'] }}</td>
+                    <td>
+                        <a href="/delete/{{ issue['Veri No'] }}" onclick="return confirm('Bu arızayı silmek istediğinizden emin misiniz?');">Sil</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
