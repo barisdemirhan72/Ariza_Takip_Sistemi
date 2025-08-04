@@ -19,12 +19,25 @@
         button { background-color: #3498db; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; }
         button:hover { background-color: #2980b9; }
         .back-link { display: inline-block; margin-top: 20px; color: #3498db; }
+        .stats { margin-top: 20px; }
+        .stats ul { list-style: none; padding: 0; }
+        .stats li { margin-bottom: 5px; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Admin Paneli</h1>
         <a href="/" class="back-link">Haritaya Geri Dön</a>
+
+        <!-- Arıza İstatistikleri -->
+        <div class="stats">
+            <h2>Arıza İstatistikleri</h2>
+            <ul>
+                <li>Toplam Arıza: {{ issues|length }}</li>
+                <li>Tamamlanan Arıza: {{ issues|selectattr('completed')|list|length }}</li>
+                <li>Tamamlanmamış Arıza: {{ issues|rejectattr('completed')|list|length }}</li>
+            </ul>
+        </div>
 
         <h2>Yeni Arıza Ekle</h2>
         <form action="/add" method="POST">
@@ -43,6 +56,7 @@
                     <th>Arıza No</th>
                     <th>Mahalle</th>
                     <th>Koordinatlar</th>
+                    <th>Durum</th>
                     <th>İşlem</th>
                 </tr>
             </thead>
@@ -53,6 +67,7 @@
                     <td>{{ issue.get('No', 'N/A') }}</td>
                     <td>{{ issue['Mahalle İsmi'] }}</td>
                     <td>{{ issue['Koordinatlar'] }}</td>
+                    <td>{{ 'Tamamlandı' if issue.completed else 'Beklemede' }}</td>
                     <td>
                         <a href="/delete/{{ issue['Veri No'] }}" onclick="return confirm('Bu arızayı silmek istediğinizden emin misiniz?');">Sil</a>
                     </td>
